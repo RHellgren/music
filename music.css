@@ -85,6 +85,7 @@ form {
 	height: 400px;
 
 	position: relative;
+	visibility: hidden;
 }
 #caNowplaying {
 	width: 300px;

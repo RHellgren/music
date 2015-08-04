@@ -8,7 +8,6 @@
 		var notPlayingVariable = 0; // Solves update-issue with nowplaying on lastfm
 
 		function loadPage() {
-			document.getElementById("nowplaying").style.display = 'none';
 			var username = location.search.split('username=')[1];
 			if(username) {
 				getCovers();
@@ -18,7 +17,6 @@
 		}
 
 		function getUsername() {
-			document.getElementById("nowplaying").style.display = 'none';
 			document.getElementById('username').style.visibility = 'visible';
 		}
 
