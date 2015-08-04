@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Music</title>
+	<link rel="stylesheet" type="text/css" href="music.css">
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script>
+		var notPlayingVariable = 0; // Solves update-issue with nowplaying on lastfm
+
+		function loadPage() {
+			var username = location.search.split('username=')[1];
+			if(username) {
+				getCovers();
+				nowPlaying();
+			} else
+				getUsername();
+		}
+
+		function getUsername() {
+			document.getElementById("nowplaying").style.display = 'none';
+			document.getElementById('username').style.visibility = 'visible';
+		}
+
+		function getCovers() {
+			document.getElementById('background').style.display = 'none';
+			document.getElementById('login').style.display = 'none';
+			document.getElementById('username').style.visibility = 'hidden';
+			$.getJSON( "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=rhellgren&api_key=12c8dd3a6879c24476b3282fed713a27&format=json&limit=200",
+				function(data) {
+					var listToAvoidDoubles = [];
+					var albums = [];
+					$.each(data.recenttracks.track, function(i, music) {
+						if (listToAvoidDoubles.indexOf(music.album["#text"]) == -1 && music.image[0]["#text"] !== "") {
+							albums.push([music.artist["#text"],music.album["#text"],music.image[3]["#text"]]);
+							listToAvoidDoubles.push(music.album["#text"]);
+						}
+					});
+					showCovers(albums);
+				});
+		}
+
+		function showCovers(albums) {
+			var counter = 0;
+			while (counter < 60) {
+				$('div#covers').append('<div class="pic"><img class="cover" id=' + counter + ' src=' + albums[counter][2] +
+					' alt="Cover Art"><p class="picDescription" id="pic' + counter +'"><br>' + albums[counter][0] + '<br><br>' + albums[counter][1] + '</p></div>');
+				counter++;
+			}
+			nowPlaying();
+			updateCover(albums);
+		}
+
+		function updateCover(albums) {
+			checkNew();
+			var randomID = Math.floor((Math.random() * 59) + 1);
+			var randomCover = Math.floor((Math.random() * (albums.length - 1)) + 1);
+			document.getElementById(randomID).src = albums[randomCover][2];
+			document.getElementById('pic' + randomID).innerHTML = ('<br>' + albums[randomCover][0] + '<br><br>' + albums[randomCover][1]);
+
+			var randomDelay = 1000*Math.floor((Math.random() * 5) + 1); //change next in 1-5 seconds
+			var bs = setTimeout(function(){updateCover(albums)},randomDelay);
+		}
+
+		function nowPlaying() {
+			document.getElementById("infoNowplaying").innerHTML = ('');
+			document.getElementById("caNowplaying").src = ('');
+			$.getJSON( "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&limit=1&user=rhellgren&api_key=12c8dd3a6879c24476b3282fed713a27&format=json",
+				function(data) {
+					$.each(data.recenttracks.track, function(i, music) {
+						if (typeof music["@attr"] !== "undefined" && music["@attr"].nowplaying == "true") {
+							document.getElementById("nowplaying").style.visibility = "visible";
+							document.getElementById("infoNowplaying").innerHTML = ("<p id='nowPlayingText'>Now playing:</p> <br>" + music.artist["#text"] + ' - ' +  music.name);
+							if (music.album["#text"] != '')
+								document.getElementById("infoNowplaying").innerHTML += ' (' + music.album["#text"] + ')';
+							if (music.image[3]["#text"] != '')
+								document.getElementById("caNowplaying").src = (music.image[3]["#text"]);
+							else
+								document.getElementById("caNowplaying").src = 'notes.png';
+						}
+					});
+				}
+			);
+		}
+
+		function checkNew() {
+			$.getJSON( "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&limit=1&user=rhellgren&api_key=12c8dd3a6879c24476b3282fed713a27&format=json",
+				function(data) {
+					$.each(data.recenttracks.track, function(i, music) {
+						if (typeof music["@attr"] !== "undefined" && music["@attr"].nowplaying == "true") {
+							notPlayingVariable = 0;
+							document.getElementById("nowplaying").style.visibility = "visible";
+							if(document.getElementById("caNowplaying").src != (music.image[3]["#text"])) {
+								nowPlaying();
+							}
+						} else if (isNotPlaying()) {
+							notPlayingVariable++;
+							if(notPlayingVariable > 2)
+								document.getElementById("nowplaying").style.visibility = "hidden";
+						}
+					});
+				}
+			);
+		}
+
+		function isNotPlaying() {
+			var result = true;
+			$.getJSON( "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&limit=1&user=rhellgren&api_key=12c8dd3a6879c24476b3282fed713a27&format=json",
+				function(data) {
+					$.each(data, function(i, info) {
+						if (info.hasOwnProperty('nowplaying'))
+							result = false;
+
+					});
+				}
+			);
+			return result;
+		}
+	</script>
+</head>
+<body onload="loadPage()">
+	<div id="background"></div>
+	<div id="login">
+		<form method="GET">
+			<input type="text" id="username" name="username" class="resizedTextbox" placeholder="lastfm username">
+		</form>
+	</div>
+	<div id="foreground">
+		<div id="covers"></div>
+		<div id="nowplaying">
+			<img id="caNowplaying" src="">
+			<p id="infoNowplaying"></p>
+		</div>
+	</div>
+</body>
+</html>
