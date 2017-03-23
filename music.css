@@ -55,9 +55,13 @@ body {
 }
 
 form {
+	display: block;
+    margin: auto;
+    margin-top: 10%;
+
+    width: 300px;
+
 	z-index: 2;
-	padding-top: 200px;
-	padding-left: 37%;
 	font-size: 30px;
 }
 
@@ -72,8 +76,9 @@ form {
 }
 
 #nowplaying {
-	margin-left: 37%;
-	margin-top: 5%;
+	display: block;
+    margin: auto;
+    margin-top: 10%;
 
 	border: solid 1px;
 	border-radius: 25px;
